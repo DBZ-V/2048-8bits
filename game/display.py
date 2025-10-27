@@ -3,6 +3,8 @@ from game.board import Board
 from game.sounds import play_sequence,make_wave , get_slide_note
 import random
 import os
+from game.highscore import load_highscores, is_highscore, save_highscores, enter_initials
+
 
 COLORS = {
     0:  (64, 64, 64),
@@ -35,33 +37,33 @@ SIDE_PANEL = 200
 WINDOW_WIDTH = WINDOW_SIZE + SIDE_PANEL
 WINDOW_HEIGHT = WINDOW_SIZE                 # Augmenter la taille de la fenêtre
 
-def load_highscores(filepath="game/highscores.txt", max_entries=6):
-    """Lit un fichier texte et retourne une liste [(nom, score_str, score_int), ...]"""
-    scores = []
-    try:
-        with open(filepath, "r") as f:
-            for line in f:
-                parts = line.strip().split()
-                if len(parts) == 2 and parts[1].isdigit():
-                    name, score_str = parts
-                    score_int = int(score_str)
-                    scores.append((name.upper(), score_str, score_int))
-    except FileNotFoundError:
-        # fichier manquant => scores vides
-        scores = [("AAA", "0000", 0)] * max_entries
-
-    # Tri sur la valeur numérique
-    scores.sort(key=lambda x: x[2], reverse=True)
-
-    # Ne renvoyer que nom + score texte
-    return [(n, s) for n, s, _ in scores[:max_entries]]
+# def load_highscores(filepath="game/highscores.txt", max_entries=6):
+#     """Lit un fichier texte et retourne une liste [(nom, score_str, score_int), ...]"""
+#     scores = []
+#     try:
+#         with open(filepath, "r") as f:
+#             for line in f:
+#                 parts = line.strip().split()
+#                 if len(parts) == 2 and parts[1].isdigit():
+#                     name, score_str = parts
+#                     score_int = int(score_str)
+#                     scores.append((name.upper(), score_str, score_int))
+#     except FileNotFoundError:
+#         # fichier manquant => scores vides
+#         scores = [("AAA", "0000", 0)] * max_entries
+# 
+#     # Tri sur la valeur numérique
+#     scores.sort(key=lambda x: x[2], reverse=True)
+# 
+#     # Ne renvoyer que nom + score texte
+#     return [(n, s) for n, s, _ in scores[:max_entries]]
 
 
 
 
 def draw_board(screen, board, font):
     # --- Zone de jeu principale ---
-    screen.fill((0, 128, 128))
+    screen.fill((0, 164, 164))
     for r in range(board.size):
         for c in range(board.size):
             val = board.grid[r][c]
@@ -110,8 +112,9 @@ def draw_board(screen, board, font):
     screen.blit(title_text, title_rect)
     y_offset += 40
 
-    for name, score in highscores:
-        entry_text = font.render(f"{name}  {score}", True, (0, 0, 0))
+    # for name, score in highscores:
+    for name, score_str, _ in highscores:
+        entry_text = font.render(f"{name}  {score_str}", True, (0, 0, 0))
         entry_rect = entry_text.get_rect(center=(panel_x + panel_width / 2, y_offset))
         screen.blit(entry_text, entry_rect)
         y_offset += 40
@@ -124,13 +127,41 @@ def draw_board(screen, board, font):
     screen.blit(title_text, title_rect)
     y_offset += 40
 
-    for name, score in highscores:
-        entry_text = font.render(f"{name}  {score}", True, (0, 164, 164))
+    # for name, score in highscores:
+    for name, score_str, _ in highscores:
+    
+        entry_text = font.render(f"{name}  {score_str}", True, (0, 164, 164))
         entry_rect = entry_text.get_rect(center=(panel_x + panel_width / 2, y_offset))
         screen.blit(entry_text, entry_rect)
         y_offset += 40
 
     pygame.display.flip()
+
+def draw_game_over(screen, font, alpha):
+    """Affiche 'GAME OVER' avec ombre portée et transparence."""
+    # Surface transparente pour surimpression
+    overlay = pygame.Surface((WINDOW_SIZE, WINDOW_HEIGHT), pygame.SRCALPHA)
+
+    # Texte principal
+    text = font.render("GAME OVER", True, (255, 255, 255))
+    text.set_alpha(alpha)
+    text_rect = text.get_rect(center=(WINDOW_SIZE // 2, WINDOW_HEIGHT // 3))
+
+    # Ombre portée noire (contour léger autour du texte)
+    outline = font.render("GAME OVER", True, (0, 0, 0))
+    outline.set_alpha(alpha)
+
+    # Positions autour du texte (ombre de 2 pixels)
+    for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
+        overlay.blit(outline, (text_rect.x + dx, text_rect.y + dy))
+
+    # Texte blanc par-dessus
+    overlay.blit(text, text_rect)
+
+    # Surimpression finale
+    screen.blit(overlay, (0, 0))
+    pygame.display.flip()
+
 
 
 def main():
@@ -178,12 +209,61 @@ def main():
                 ('re', 100), ('do', 200)
             ]
             play_sequence(sequence)
+
+
+            for i in range(40):
+                draw_board(screen, b, font)
+                alpha = abs(int(255 * (i % 10) / 10 - 128)) + 100
+                draw_game_over(screen, font, alpha)
+                pygame.time.wait(100)
+
             pygame.time.wait(1500)
+
+        
+
+            # --- Gestion du highscore ---
+            highscores = load_highscores()
+
+            sequence =  [
+                ('do', 100),
+                ('mi', 100),
+                ('sol', 100),
+                ('do', 150),
+                ('silence', 50),
+                ('sol', 80),
+                ('la', 80),
+                ('si', 80),
+                ('do', 200)
+            ]
+            
+            sequence_end = [
+                ('do', 100), ('mi', 100), ('sol', 100),
+                ('do', 150), ('silence', 50),
+                ('mi', 80), ('fa', 80), ('sol', 80),
+                ('la', 100), ('si', 100), ('do', 200),
+                ('sol', 100), ('mi', 100), ('do', 300)
+            ]
+
+
+            if is_highscore(b.score, highscores):
+                play_sequence(sequence)
+                name = enter_initials(screen, font, b.score)
+                play_sequence(sequence_end)
+                if name:
+                    # Ajoute et trie le nouveau score
+                    highscores.append((name, f"{b.score:04d}", b.score))
+                    highscores.sort(key=lambda x: x[2], reverse=True)
+                    save_highscores(highscores[:6])
+
+            pygame.time.wait(1000)
+
+
+
             running = False
 
         clock.tick(30)
 
-    pygame.quit()
+#    pygame.quit()
 
 if __name__ == "__main__":
     main()
