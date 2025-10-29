@@ -4,7 +4,7 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow)
 
 🇬🇧 🇨🇦 🇺🇸 [French version below]
-📑 Jump to: [English](#-🕹️-2048---Python-95-Edition) | [Français](#-🕹️-2048---Python-95-Edition-)
+📑 Jump to: [English](#-2048---Python-95-Edition) | [Français](#-2048---Python-95-Edition-1)
 
 A retro reinterpretation of the classic 2048, coded in Python with Pygame, 8-bit atmosphere and 90s-style interface.  
 This project includes dynamic visual effects, real-time generated sounds, and a complete highscore system saved locally.
