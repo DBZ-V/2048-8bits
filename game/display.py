@@ -4,7 +4,8 @@ from game.sounds import play_sequence,make_wave , get_slide_note
 import random
 import os
 from game.highscore import load_highscores, is_highscore, save_highscores, enter_initials
-
+import math
+import time
 
 COLORS = {
     0:  (64, 64, 64),
@@ -28,6 +29,16 @@ NOTE_BY_MOVE = {
     pygame.K_RIGHT: 'slide_sound'
 }
 
+def draw_retro_gradient(screen, top_color, bottom_color, step=15):
+    """Dégradé horizontal en bandes visibles (style années 90)."""
+    width, height = screen.get_size()
+    for x in range(0, width, step):
+        ratio = x / width
+        r = int(top_color[0] * (1 - ratio) + bottom_color[0] * ratio)
+        g = int(top_color[1] * (1 - ratio) + bottom_color[1] * ratio)
+        b = int(top_color[2] * (1 - ratio) + bottom_color[2] * ratio)
+        pygame.draw.rect(screen, (r, g, b), (x, 0, step, height))
+
 TILE_SIZE = 100
 PADDING = 10
 WINDOW_SIZE = TILE_SIZE * 4 + PADDING * 5
@@ -49,77 +60,142 @@ WINDOW_HEIGHT = WINDOW_SIZE                 # Augmenter la taille de la fenêtre
 #                     score_int = int(score_str)
 #                     scores.append((name.upper(), score_str, score_int))
 #     except FileNotFoundError:
-#         # fichier manquant => scores vides
+#         # ============== fichier manquant => scores vides ==============
 #         scores = [("AAA", "0000", 0)] * max_entries
 # 
-#     # Tri sur la valeur numérique
+#     # ============== Tri sur la valeur numérique ==============
 #     scores.sort(key=lambda x: x[2], reverse=True)
 # 
-#     # Ne renvoyer que nom + score texte
+#     # ============== Ne renvoyer que nom + score texte ==============
 #     return [(n, s) for n, s, _ in scores[:max_entries]]
 
 
 
 
 def draw_board(screen, board, font):
-    # --- Zone de jeu principale ---
-    screen.fill((0, 164, 164))
+    # ============== Zone de jeu principale ==============
+    # screen.fill((0, 164, 164))
+    draw_retro_gradient(screen,(0, 164, 164),(0, 100, 100), step = 25)
+
+    # ============== valeur la plus haute actuelle ==============
+    max_val = 0
+    for row in board.grid:
+        for cell in row:
+            if cell > max_val:
+                max_val = cell
+
+    # for r in range(board.size):
+    #     for c in range(board.size):
+    #         val = board.grid[r][c]
+    #         color = COLORS.get(val, (255, 255, 255))
+    #         x = PADDING + c * (TILE_SIZE + PADDING)
+    #         y = PADDING + r * (TILE_SIZE + PADDING)
+    #         pygame.draw.rect(screen, color, (x, y, TILE_SIZE, TILE_SIZE))
+    #         pygame.draw.rect(screen, (0, 0, 0), (x, y, TILE_SIZE, TILE_SIZE), 2)
+
+    #         if val != 0:
+    #             text = font.render(str(val), True, (0, 0, 0))
+    #             text_rect = text.get_rect(center=(x + TILE_SIZE / 2, y + TILE_SIZE / 2))
+    #             screen.blit(text, text_rect)
+
+      # ============== Dessine la grille ==============
     for r in range(board.size):
         for c in range(board.size):
             val = board.grid[r][c]
-            color = COLORS.get(val, (255, 255, 255))
+            base_color = COLORS.get(val, (255, 255, 255))
+
             x = PADDING + c * (TILE_SIZE + PADDING)
             y = PADDING + r * (TILE_SIZE + PADDING)
-            pygame.draw.rect(screen, color, (x, y, TILE_SIZE, TILE_SIZE))
-            pygame.draw.rect(screen, (0, 0, 0), (x, y, TILE_SIZE, TILE_SIZE), 2)
 
+            # ============== Par défaut sans d'offset ni pulse ==============
+            draw_x = x
+            draw_y = y
+            fill_color = base_color
+            border_color = (0, 0, 0)
+            do_glitch_rgb_outline = False
+
+            if val == max_val and val != 0:
+                # ============== Effet GLITCH pour la tuile la plus haute ==============
+
+                # ============== tremblement ==============
+                jitter_x = random.randint(-1, 1)
+                jitter_y = random.randint(-1, 1)
+                draw_x = x + jitter_x
+                draw_y = y + jitter_y
+
+                # ============== pulsation de luminosité ==============
+                pulse = (math.sin(time.time() *5) + 1) / 2  # oscille entre 0 et 1
+
+                # ============== booste couleur ==============
+                fill_color = tuple(
+                    min(255, int(ch * (0.8 + 0.4 * pulse)))
+                    for ch in base_color
+                )
+
+                # ============== contour ==============
+                do_glitch_rgb_outline = True
+                border_color = (255, 255, 255)
+
+            # ============== Dessin du bloc principal ==============
+            pygame.draw.rect(screen, fill_color, (draw_x, draw_y, TILE_SIZE, TILE_SIZE))
+            pygame.draw.rect(screen, border_color, (draw_x, draw_y, TILE_SIZE, TILE_SIZE), 2)
+
+            # # ============== Effet contour RGB décalé ==============
+            # if do_glitch_rgb_outline:
+            #     pygame.draw.rect(screen, (255, 0, 0),
+            #                      (draw_x - 2, draw_y, TILE_SIZE, TILE_SIZE), 2)
+            #     pygame.draw.rect(screen, (0, 255, 255),
+            #                      (draw_x + 2, draw_y, TILE_SIZE, TILE_SIZE), 2)
+
+            # ============== Texte dans la tuile ==============
             if val != 0:
                 text = font.render(str(val), True, (0, 0, 0))
-                text_rect = text.get_rect(center=(x + TILE_SIZE / 2, y + TILE_SIZE / 2))
+                text_rect = text.get_rect(center=(draw_x + TILE_SIZE / 2, draw_y + TILE_SIZE / 2))
                 screen.blit(text, text_rect)
 
-    # --- Panneau latéral droit ---
+
+    # ============== Panneau latéral droit ==============
     panel_x = WINDOW_SIZE + PADDING
     panel_y = PADDING
     panel_width = SIDE_PANEL - 2 * PADDING
     panel_height = WINDOW_HEIGHT - 2 * PADDING
 
-    # fond gris avec bord noir
+    # ============== fond gris avec bord noir ==============
     pygame.draw.rect(screen, (192, 192, 192), (panel_x, panel_y, panel_width, panel_height))
     pygame.draw.rect(screen, (0, 0, 0), (panel_x, panel_y, panel_width, panel_height), 2)
 
-    # --- Texte du score ---
+    # ============== Texte du score ==============
     score_text = font.render("SCORE", True, (0, 0, 255))
-    value_text = font.render(str(board.score), True, (0, 0, 255))
+    value_text = font.render(str(board.score), True, (0, 0, 150))
     score_rect = score_text.get_rect(center=(panel_x + panel_width / 2, panel_y + 40))
     value_rect = value_text.get_rect(center=(panel_x + panel_width / 2, panel_y + 100))
     screen.blit(score_text, score_rect)
     screen.blit(value_text, value_rect)
 
-     # --- Texte du score ---
+     # ============== Texte du score ==============
     score_text = font.render("SCORE", True, (255, 255, 255))
-    value_text = font.render(str(board.score), True, (255, 255, 0))
+    value_text = font.render(str(board.score), True, (0, 255, 0))
     score_rect = score_text.get_rect(center=(panel_x + panel_width / 2, panel_y + 38))
     value_rect = value_text.get_rect(center=(panel_x + panel_width / 2, panel_y + 98))
     screen.blit(score_text, score_rect)
     screen.blit(value_text, value_rect)
 
-    # --- Highscores ---
+    # ============== Highscores ==============
     highscores = load_highscores()
     y_offset = panel_y + 162
-    title_text = font.render("HIGHSCORES", True, (0, 0, 255))
+    title_text = font.render("HIGHSCORES", True, (255, 100, 0))
     title_rect = title_text.get_rect(center=(panel_x + panel_width / 2, y_offset))
     screen.blit(title_text, title_rect)
     y_offset += 40
 
-    # for name, score in highscores:
+    # ============== for name, score in highscores ==============
     for name, score_str, _ in highscores:
         entry_text = font.render(f"{name}  {score_str}", True, (0, 0, 0))
         entry_rect = entry_text.get_rect(center=(panel_x + panel_width / 2, y_offset))
         screen.blit(entry_text, entry_rect)
         y_offset += 40
 
-        # --- Highscores ---
+        # ============== Highscores ==============
     highscores = load_highscores()
     y_offset = panel_y + 160
     title_text = font.render("HIGHSCORES", True, (255, 255, 0))
@@ -127,7 +203,7 @@ def draw_board(screen, board, font):
     screen.blit(title_text, title_rect)
     y_offset += 40
 
-    # for name, score in highscores:
+    # ============== for name, score in highscores: ==============
     for name, score_str, _ in highscores:
     
         entry_text = font.render(f"{name}  {score_str}", True, (0, 164, 164))
@@ -139,26 +215,26 @@ def draw_board(screen, board, font):
 
 def draw_game_over(screen, font, alpha):
     """Affiche 'GAME OVER' avec ombre portée et transparence."""
-    # Surface transparente pour surimpression
+    # ============== Surface transparente pour surimpression ==============
     overlay = pygame.Surface((WINDOW_SIZE, WINDOW_HEIGHT), pygame.SRCALPHA)
 
-    # Texte principal
+    # ============== Texte principal ==============
     text = font.render("GAME OVER", True, (255, 255, 255))
     text.set_alpha(alpha)
     text_rect = text.get_rect(center=(WINDOW_SIZE // 2, WINDOW_HEIGHT // 3))
 
-    # Ombre portée noire (contour léger autour du texte)
+    # ============== Ombre portée noire (contour léger autour du texte) ==============
     outline = font.render("GAME OVER", True, (0, 0, 0))
     outline.set_alpha(alpha)
 
-    # Positions autour du texte (ombre de 2 pixels)
+    # ============== Positions autour du texte (ombre de 2 pixels) ==============
     for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
         overlay.blit(outline, (text_rect.x + dx, text_rect.y + dy))
 
-    # Texte blanc par-dessus
+    # ============== Texte blanc par-dessus ==============
     overlay.blit(text, text_rect)
 
-    # Surimpression finale
+    # ============== Surimpression finale ==============
     screen.blit(overlay, (0, 0))
     pygame.display.flip()
 
@@ -221,7 +297,7 @@ def main():
 
         
 
-            # --- Gestion du highscore ---
+            # ============== Gestion du highscore ==============
             highscores = load_highscores()
 
             sequence =  [
@@ -250,7 +326,7 @@ def main():
                 name = enter_initials(screen, font, b.score)
                 play_sequence(sequence_end)
                 if name:
-                    # Ajoute et trie le nouveau score
+                    # ============== Ajoute et trie le nouveau score ==============
                     highscores.append((name, f"{b.score:04d}", b.score))
                     highscores.sort(key=lambda x: x[2], reverse=True)
                     save_highscores(highscores[:6])
@@ -263,7 +339,7 @@ def main():
 
         clock.tick(30)
 
-#    pygame.quit()
+#    ============== pygame.quit() ==============
 
 if __name__ == "__main__":
     main()

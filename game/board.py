@@ -8,7 +8,7 @@ class Board:
         self.spawn_tile()
         self.spawn_tile()
 
-    # --- Apparition d'une nouvelle tuile ---
+    # ============== Apparition d'une nouvelle tuile ==============
     def spawn_tile(self):
         empty = [(r, c) for r in range(self.size) for c in range(self.size) if self.grid[r][c] == 0]
         if not empty:
@@ -17,7 +17,7 @@ class Board:
         self.grid[r][c] = random.choice([2] * 9 + [4])
         return True
 
-    # --- Vérifie si un mouvement est possible ---
+    # ============== Vérifie si un mouvement est possible ==============
     def can_move(self):
         for row in self.grid:
             if 0 in row:
@@ -30,13 +30,13 @@ class Board:
                     return True
         return False
 
-    # --- Décale les nombres non nuls à gauche ---
+    # ============== Décale les nombres non nuls à gauche ==============
     def compress(self, row):
         new_row = [n for n in row if n != 0]
         new_row += [0] * (self.size - len(new_row))
         return new_row
 
-    # --- Fusionne les tuiles adjacentes identiques ---
+    # ============== Fusionne les tuiles adjacentes identiques ==============
     def merge(self, row):
         merged = False
         for i in range(self.size - 1):
@@ -47,7 +47,7 @@ class Board:
                 merged = True
         return self.compress(row), merged
 
-    # --- Mouvements ---
+    # ============== Mouvements ==============
     def move_left(self):
         moved = False
         merged_any = False

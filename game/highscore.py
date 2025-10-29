@@ -38,7 +38,7 @@ def is_highscore(current_score, highscores):
         return True
 
     last = highscores[-1]
-    # Gère les anciens formats à 2 champs
+    # ============== Gère les anciens formats à 2 champs ==============
     lowest = int(last[2]) if len(last) > 2 else int(last[1])
     return current_score > lowest
 
@@ -99,13 +99,13 @@ def enter_initials(screen, font, current_score,
     index = 0
     done = False
 
-    # Même taille et position que le panneau droit défini dans display.py
+    # ============== Même taille et position que le panneau droit défini dans display.py ==============
     panel_x = window_size + padding
     panel_y = padding
     panel_width = side_panel - 2 * padding
     panel_height = screen.get_height() - 2 * padding
 
-    # Surface de saisie : panneau girs opaque
+    # ============== Surface de saisie : panneau girs opaque ==============
     overlay = pygame.Surface((panel_width, panel_height), pygame.SRCALPHA)
     overlay.fill((192, 192, 192, 255))  # fond gris opaque
     panel_rect = pygame.Rect(panel_x, panel_y, panel_width, panel_height)
@@ -126,21 +126,21 @@ def enter_initials(screen, font, current_score,
                 elif event.key == pygame.K_DOWN:
                     initials[index] = chr(((ord(initials[index]) - 65 - 1) % 26) + 65)
 
-        # Dessin du panneau
+        # ============== Dessin du panneau ==============
         screen.blit(overlay, (panel_x, panel_y))
         pygame.draw.rect(screen, (255, 255, 255), panel_rect, 3)  # contour blanc
 
-        # Texte "ENTER YOUR INITIALS"
+        # ============== Texte "ENTER YOUR INITIALS" ==============
         title = font.render("NEW RECORD", True, (0, 0, 0))
         title_rect = title.get_rect(center=(panel_x + panel_width // 2, panel_y + 60))
         screen.blit(title, title_rect)
 
-        # Texte "ENTER YOUR INITIALS"
+        # ============== Texte "ENTER YOUR INITIALS" ==============
         title = font.render("NEW RECORD", True, (0, 255, 0))
         title_rect = title.get_rect(center=(panel_x + panel_width // 2 - 2, panel_y + 60 - 2))
         screen.blit(title, title_rect)
 
-        # Score affiché
+        # ============== Score affiché ==============
         # Texte "SCORE:"
         score_text = font.render("SCORE:", True, (255, 0, 0))
         score_rect = score_text.get_rect(center=(panel_x + panel_width // 2, panel_y + 120))

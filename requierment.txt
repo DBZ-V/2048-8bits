@@ -1,0 +1,15 @@
+# --- Base du jeu ---
+pygame>=2.6.0          # Moteur principal (affichage, son, événements)
+numpy>=1.26.0          # Utilisé pour générer des sons ou gérer la grille
+sounddevice>=0.4.6     # Lecture des sons générés à la volée
+
+# --- Utilitaires systèmes ---
+os-sys                # Inclus par défaut, mais utile à noter si tu veux figer l’environnement
+random2               # Générateur aléatoire compatible rétro (sinon random intégré suffit)
+time                  # Inclus par défaut, utilisé pour le pulsating glitch
+
+# --- Compilation optionnelle ---
+pyinstaller>=6.0.0     # Pour générer un exécutable (.exe ou binaire Linux)
+
+# --- Dev / test facultatifs ---
+pytest>=8.0.0          # Si tu veux garder tes tests unitaires (test_board, etc.)

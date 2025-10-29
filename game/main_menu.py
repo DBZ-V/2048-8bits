@@ -23,7 +23,7 @@ def draw_menu(screen, font, title_font, highscores):
 
     draw_retro_gradient(screen,(0, 164, 164),(0, 100, 100), step = 25)
 
-    # --- Titre du jeu ---
+    # ============== Titre du jeu ==============
     title = title_font.render("2048  -  PYTHON 95'", True, (255, 150, 0))
     title_rect = title.get_rect(center=(WINDOW_WIDTH // 2, 40 + 2))
     screen.blit(title, title_rect)
@@ -33,7 +33,7 @@ def draw_menu(screen, font, title_font, highscores):
     screen.blit(title, title_rect)
 
 
-    # --- Instructions ---
+    # ============== Instructions ==============
 
     text = font.render("PRESS [SPACE] TO START", True, (164, 0, 164))
     text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, 100 + 2))
@@ -44,7 +44,7 @@ def draw_menu(screen, font, title_font, highscores):
     text_rect = text.get_rect(center=(WINDOW_WIDTH // 2, 100))
     screen.blit(text, text_rect)
 
-    # --- Highscores ---
+    # ============== Highscores ==============
     y = 150
 
     hs_title = font.render("HIGHSCORES", True, (0, 100, 155))
